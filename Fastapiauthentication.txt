@@ -1,0 +1,113 @@
+main.py (Entry point for the API)
+models.py (Database schema and connection)
+utils.py (Utility functions for password hashing and JWT token handling)
+Each file has a specific role in ensuring that the system works smoothly.
+---------------------------------------------------------------------------------------
+1. main.py - FastAPI Application (Entry Point)
+This is the main file that runs the FastAPI application, exposing the API routes.
+
+Key Components:
+FastAPI Initialization:
+The app is created using FastAPI().
+
+Database Initialization:
+Base.metadata.create_all(bind=engine) ensures that database tables are created.
+
+Dependency Injection for Database Session (get_db):
+
+Uses yield to provide a session and closes it automatically after the request.
+Authentication Handling (HTTPBearer):
+
+Used for JWT-based authentication in protected routes.
+----------------------------------------------------------------------------------------
+API Endpoints:
+@app.post("/register") - User Registration
+Checks if the email already exists.
+Hashes the password using hash_password().
+Stores the new user in the database.
+
+@app.post("/login") - User Login
+Verifies the user’s email and password.
+If correct, generates a JWT token using create_jwt_token().
+Returns the access token.
+
+@app.get("/protected") - Protected Route
+Requires a valid JWT token in the Authorization header.
+Extracts and verifies the token using verify_jwt_token().
+If valid, grants access to the route.
+------------------------------------------------------------------------------------------
+2. utils.py - Utility Functions
+This file contains helper functions for:
+
+Password Hashing
+JWT Token Generation
+JWT Token Verification
+
+Key Functions:
+hash_password(password: str) -> str
+Uses SHA-256 hashing with a salt (UTF-8).
+Ensures passwords are securely stored.
+
+create_jwt_token(data: dict) -> str
+Creates a JWT token with an expiration time of 1 hour.
+Uses HS256 algorithm and a secret key.
+
+verify_jwt_token(token: str) -> dict
+Decodes and verifies the JWT token.
+Returns the payload if valid, else returns None.
+-------------------------------------------------------------------------------------------
+3. models.py - Database Models and Connection
+This file defines:
+.Database connection
+.User model (User table)
+
+Database Connection:
+SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:root@localhost/ppe"
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+.Connects to a MySQL database (ppe).
+.Uses pymysql as the driver.
+
+User Model (User)
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(50), unique=True, nullable=False)
+    email = Column(String(100), unique=True, nullable=False)
+    password = Column(String(255), nullable=False)
+
+
+Defines the users table
+Stores id, username, email, and password
+---------------------------------------------------------------------------------------------
+
+LIBRARY USED IN THIS 
+Library-	Purpose
+fastapi-	Web framework for building APIs.
+sqlalchemy-	ORM for database interaction.
+pydantic-	Data validation for request models.
+hashlib-	Used for hashing passwords (SHA-256).
+jwt (PyJWT)-	Creates and verifies JWT tokens.
+datetime-	Handles token expiration timestamps.
+pymysql-	MySQL database driver for SQLAlchemy.
+--------------------------------------------------------------------------------------------------
+FILE CONNECTION AND FLOW
+
+-User registers via /register
+
+-hash_password() from utils.py hashes the password.
+-User is saved in MySQL (models.py).
+-User logs in via /login
+
+-Password is checked.
+-create_jwt_token() generates a JWT token.
+-User accesses /protected
+
+-Token is extracted and verified using verify_jwt_token().
+---------------------------------------------------------------------------------------------------
+
+
+
+
+
